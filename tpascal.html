@@ -1,0 +1,229 @@
+<html>
+  <head>
+    <title>Project X</title>
+    <script type="text/javascript" src="./assets/js/jquery.min.js"></script>
+    <script type="text/javascript" src="./assets/js/lodash.min.js"></script>
+    <script type="text/javascript" src="./assets/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="./assets/css/bootstrap.min.css">
+    <style type="text/css">
+        body {
+            padding-top: 50px;
+        }
+        .badge-btn {
+            margin: 5px;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col">
+            <h1>Lexical Analysis</h1>
+            <h2> TURBO PASCAL </h2>
+            <br>
+            <br>
+            <br>
+            <div class="dropdown">
+            <button class="dropbtn">Choose Language</button>
+            <div class="dropdown-content">
+            <a href="python.html">Python</a>
+            <a href="javascript.html">Java Script</a>
+            <a href="csharp.html">C#</a>
+            <a href="tpascal.html">Turbo Pascal</a>
+            <a href="#">MySQL</a>
+
+            </div>
+            </div>
+            <br>
+            <br>
+            <br>
+            <label><b>Enter your code:</b></label>
+            <br>
+            <textarea class="form-control" id="yourCode" rows="20" cols="70"></textarea>
+            <br>
+            <button id="submit" class="btn btn-primary">Analyze</button>
+
+            <hr>
+            <div class="result">
+                <h2>Result:</h2>
+                <ul id="resultList">
+                </ul>
+            </div>
+        </div>
+        <div class="col-5">
+            <div id="summaryReport">
+                <h3>Summary</h3>
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                  <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#identifier" role="tab">Identifiers</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#keyword" role="tab">Keywords</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#spec" role="tab">Special Characters</a>
+                  </li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content">
+                  <div class="tab-pane" id="identifier" role="tabpanel"></div>
+                  <div class="tab-pane" id="keyword" role="tabpanel"></div>
+                  <div class="tab-pane" id="spec" role="tabpanel"></div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.dropbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {background-color: #ddd}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+</style>
+
+
+
+
+    <script type="text/javascript">
+        var resultList = $('#resultList');
+        var tabIden = $('#identifier')
+        var tabKey = $('#keyword')
+        var tabSpec = $('#spec')
+
+        var literals = [];
+        var operators = ['absolute','and','array','asm','begin','case','const','constructor','destructor','div','do','downto','else','end','file','for','function','goto','if','implementation',
+                            'in','inherited','inline','interface','label','mod','nil','not','object','of','operator','or','packed','procedure','program','record','reintroduce','repeat','self',
+                            'set','shl','shr','string','then','to','type','unit','until','uses','var','while','with','xor','AND','ARRAY','BEGIN','CASE','CONST','CONSTRUCTOR','DESTRUCTOR','DIV',
+                            'DO','DOWNTO','ELSE','END','ASM','FILE','FOR','FUNCTION','GOTO','IF','IMPLEMENTATION','IN','INLINE','INTERFACE','LABEL','MOD','NIL','NOT','OBJECT','OF','OR',
+                            'PACKED','PROCEDURE','PROGRAM','RECORD','REPEAT','SET','SHL','SHR','STRING','THEN','TYPE','TO','UNIT','UNTIL','USES','VAR','INHERITED','WHILE','WITH','XOR'];
+        var database = {
+            'identifier': literals,
+            'keyword': operators,
+            'special character' : ['(', '@',')','+','\'','\"','\\','-','#',";",":","$","&","=","==",'<', '>','{','}','[',']',',','.']
+        }
+
+        $(document).ready(function () {
+            $('.nav-tabs').tab();
+            resultList.html('<li>No Results Yet.</li>')
+        })
+
+        function escapeRegExp(text) {
+            return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        }
+
+        function analyzeCode(code) {
+            var databaseResults = {}; 
+            _.each(database, function (val, idx) {
+                databaseResults[idx] = [];
+                _.each(val, function (str) {
+                    var regex = new RegExp(escapeRegExp(str), "g");
+                    var count = code.match(regex);
+                    databaseResults[idx].push({
+                        kw: str,
+                        score: count ? count.length : 0
+                    })
+                })
+            })
+            return databaseResults;
+        }
+
+        function renderResultsAsList(results) {
+            var resultingHtml = '';
+            _.each(results, function (val, idx) {
+                var scored = _.filter(val, function (o) {
+                    return o.score > 0;
+                });
+
+                _.each(scored, function (item) {
+                    var vowels = ['a', 'e', 'i', 'o', 'u'];
+                    var determiner = _.indexOf(vowels, idx[0]) > -1 ? 'an' : 'a';
+                    var newStr = `<li><span class="text-primary">${item.kw}</span> is ${determiner} <strong>${idx}</strong></li>`;
+                    resultingHtml = resultingHtml + newStr
+                })
+            })
+            if (resultingHtml === '') {
+                resultingHtml = '<li>No results</li>';
+            }
+            return resultingHtml;
+        }
+
+        function fillTabHtmls(results) {
+            _.each(results, function(val, idx) {
+                var resultHtml = '';
+                _.each(val, function (o) {
+                    var badgeClass = o.score > 0 ? 'success' : 'info'
+                    var spanStr = `<span class="badge badge-default badge-pill">${o.score}</span>`;
+                    var objStr = `<button class="btn btn-${badgeClass} badge-btn">${o.kw} ${spanStr}</button>`
+                    resultHtml = resultHtml + objStr;
+                })
+
+                if (idx === 'identifier') {
+                    tabIden.html(resultHtml)
+                } else if (idx === 'keyword') {
+                    tabKey.html(resultHtml)
+                } else if (idx === 'special character') {
+                    tabSpec.html(resultHtml)
+                }
+            })
+            $('#summaryReport a[href="#identifier"]').removeClass('active');
+            $('#summaryReport a[href="#identifier"]').tab('show');
+        }
+
+        $('#submit').click(function (e) {
+            e.preventDefault();
+
+            resultList.html('No results yet...')
+
+            var stringVal = $('#yourCode').val();
+            var newHtml = '';
+
+            var results = analyzeCode(stringVal);
+            fillTabHtmls(results);
+            resultList.html(renderResultsAsList(results));
+        })
+
+    </script>
+
+
+  </body>
+
+</html
